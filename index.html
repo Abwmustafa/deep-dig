@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deep Dig</title>
+<meta name="description" content="A quiz about fractions, decimals and percents. Answer right, dig deeper and collect ore.">
+<style>
+:root{--ink:#1d1a17;--bg1:#6b4a2d;--bg2:#2c2017;--gold:#f5b82e;--gem:#2fd6c3;--grass:#58b947;--ok:#1d9a50;--okbg:#def5e4;--bad:#c9382f;--badbg:#fbe2df;--soft:#f3efe8;--line:#cfc6b8}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;font-family:"Trebuchet MS","Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--bg1),var(--bg2));background-attachment:fixed;transition:background .8s;-webkit-tap-highlight-color:transparent}
+body.z1{--bg1:#5c6672;--bg2:#23282e}
+body.z2{--bg1:#3b4068;--bg2:#14152a}
+.screen{display:none;position:relative;max-width:860px;margin:0 auto;padding:16px}
+.screen.on{display:block}
+button{font:inherit;color:inherit;cursor:pointer}
+.title{font-family:"Arial Black","Trebuchet MS",Impact,sans-serif;font-weight:900;text-transform:uppercase;color:var(--gold);text-shadow:3px 3px 0 var(--ink);letter-spacing:1px;margin:0;line-height:1.05}
+.big-btn{display:block;width:100%;max-width:360px;margin:12px auto 0;padding:15px 20px;font-family:"Arial Black","Trebuchet MS",sans-serif;font-size:21px;font-weight:900;text-transform:uppercase;background:var(--grass);color:#fff;text-shadow:1px 1px 0 var(--ink);border:3px solid var(--ink);border-radius:6px;box-shadow:0 5px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.big-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.big-btn.ghost{background:#fff;color:var(--ink);text-shadow:none;font-size:16px;padding:10px 16px}
+/* start */
+#start{text-align:center;padding-top:20px}
+#start .title{font-size:clamp(46px,11vw,76px)}
+.sub{color:#fff;font-size:18px;font-weight:700;margin:6px 0 2px}
+.hero{display:block;width:100%;max-width:560px;margin:4px auto 0}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px auto 4px;max-width:620px}
+.step{background:#fff;border:3px solid var(--ink);border-radius:6px;padding:10px 6px;font-weight:800;font-size:15px;line-height:1.2}
+.step b{display:block;font-size:24px;color:#b06f10;font-family:"Arial Black",sans-serif}
+/* hud */
+.hud{background:var(--ink);color:#fff;border-radius:8px;padding:8px;margin-bottom:12px;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+#strip{display:block;width:100%;height:84px;border-radius:5px;background:#1a1411}
+#world{transition:transform .5s ease-out}
+.blk{transition:opacity .25s}
+.row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;margin-top:8px}
+.bar{position:relative;height:24px;background:#463d34;border-radius:4px;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;transition:width .45s}
+.bar span{position:relative;display:block;text-align:center;font-size:13px;font-weight:800;line-height:24px;text-shadow:0 1px 1px rgba(0,0,0,.7)}
+.bar.pk i{background:#d9822b}.bar.pg i{background:var(--ok)}
+.icon{background:#463d34;border:0;color:#fff;border-radius:5px;width:38px;height:38px;font-size:18px}
+.icon.off{opacity:.45}
+.ores{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px;margin-top:7px;font-weight:800;font-size:15px}
+.ores span{display:inline-flex;align-items:center;gap:5px}
+.ores svg{width:16px;height:16px}
+.hud.hit{animation:hit .35s}
+@keyframes hit{20%{transform:translateX(-7px)}45%{transform:translateX(6px)}70%{transform:translateX(-4px)}}
+/* question card */
+.card{background:#fff;border:3px solid var(--ink);border-radius:8px;padding:14px 16px 18px;box-shadow:0 5px 0 rgba(0,0,0,.35)}
+.cardTop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.tag{background:#8a5a35;color:#fff;font-weight:800;font-size:13px;padding:4px 10px;border-radius:4px}
+.read{background:var(--soft);border:2px solid var(--line);border-radius:5px;font-weight:700;font-size:13px;padding:5px 10px}
+.prompt{font-size:21px;font-weight:700;line-height:1.4;margin:6px 0 10px}
+.art{text-align:center;margin:0 0 12px}
+.art[hidden]{display:none}
+.mini{display:inline-block;max-width:100%}.mini svg{display:block;max-width:100%;height:auto}
+.sheet-art{width:100%;max-width:240px;height:auto}
+.opts{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.opts.one{grid-template-columns:1fr}
+.opt{display:flex;align-items:center;gap:10px;min-height:58px;text-align:left;background:var(--soft);border:3px solid var(--line);border-bottom-width:6px;border-radius:6px;padding:8px 12px;font-size:20px;font-weight:800;transition:transform .08s,border-color .08s}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt .ltr{flex:none;width:30px;height:30px;border-radius:4px;background:var(--ink);color:#fff;font-size:15px;line-height:30px;text-align:center}
+.opt .t{min-width:0}
+.opt.good{background:var(--okbg);border-color:var(--ok)}.opt.good .ltr{background:var(--ok)}
+.opt.bad{background:var(--badbg);border-color:var(--bad);animation:hit .35s}.opt.bad .ltr{background:var(--bad)}
+.opt:disabled{cursor:default;color:inherit}
+.opt.dim:not(.good){opacity:.5}
+.fb{margin-top:12px;font-size:17px;font-weight:600;line-height:1.5;border-radius:6px;padding:0}
+.fb.on{padding:10px 12px}
+.fb.good{background:var(--okbg)}.fb.bad{background:var(--badbg)}
+.fb b.h{font-weight:900}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-weight:800;line-height:1.1;margin:0 .15em;font-size:.92em}
+.fr>span:first-child{border-bottom:2px solid currentColor;padding:0 .25em}
+.tb{border-collapse:collapse;margin:0 auto;font-size:17px;font-weight:700}
+.tb th,.tb td{border:2px solid var(--ink);padding:5px 14px;text-align:left}.tb th{background:var(--soft)}
+.sw{display:inline-block;width:13px;height:13px;margin-right:7px;border:1.5px solid var(--ink);vertical-align:-1px}
+#nextBtn{display:none;scroll-margin-bottom:16px}
+#nextBtn.on{display:block}
+/* dig overlay */
+#drop{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#fff}
+#drop.on{display:flex}
+#drop svg{width:140px}
+#drop .title{font-size:32px;margin-top:8px}
+/* end */
+#end{text-align:center;padding-top:20px}
+#end .title{font-size:clamp(30px,7vw,48px)}
+#endPick{width:130px;display:block;margin:6px auto}
+.score{background:#fff;border:3px solid var(--ink);border-radius:8px;padding:14px;margin:10px auto;max-width:560px}
+.score .pct{font-family:"Arial Black",sans-serif;font-size:50px;color:var(--ok);line-height:1.1}
+.score p{margin:4px 0;font-size:18px;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 0}
+.stats div{background:var(--soft);border-radius:5px;padding:8px 4px;font-size:13px;font-weight:700}
+.stats b{display:block;font-size:22px;font-family:"Arial Black",sans-serif}
+.again{margin:10px 0 0;text-align:left;font-size:16px;font-weight:600}
+.again ul{margin:4px 0 0;padding-left:20px}
+.teacher{color:#fff;font-weight:800;font-size:17px;margin:8px 0 0}
+/* toast and confetti */
+#toast{position:fixed;left:50%;bottom:18px;z-index:30;transform:translate(-50%,200%);visibility:hidden;background:var(--ink);color:#fff;font-weight:800;font-size:16px;padding:10px 16px;border-radius:6px;border:2px solid var(--gold);transition:transform .25s,visibility .25s;max-width:92vw;text-align:center}
+#toast.on{transform:translate(-50%,0);visibility:visible}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:25;overflow:hidden}
+#confetti i{position:absolute;top:-16px;width:12px;height:12px;animation:cf 2.8s linear forwards}
+@keyframes cf{to{transform:translateY(106vh) rotate(360deg)}}
+@media (max-width:560px){
+  .screen{padding:10px}
+  #strip{height:66px}
+  .row{grid-template-columns:1fr 1fr auto;gap:6px}
+  .bar span{font-size:12px}
+  .prompt{font-size:19px}
+  .opt{font-size:18px;padding:8px}
+  .steps .step{font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){.hud.hit,.opt.bad{animation:none}#world{transition:none}}
+</style>
+</head>
+<body>
+
+<section class="screen on" id="start">
+  <h1 class="title">Deep Dig</h1>
+  <p class="sub">One amount has three names: a fraction, a decimal and a percent.</p>
+  <div id="hero"></div>
+  <div class="steps">
+    <div class="step"><b>1</b>Read the question</div>
+    <div class="step"><b>2</b>Tap the right answer to break a block</div>
+    <div class="step"><b>3</b>Dig deep and collect ore</div>
+  </div>
+  <button class="big-btn" id="goBtn">Start digging</button>
+  <button class="big-btn ghost" id="newBtn" style="display:none">Start a new game</button>
+</section>
+
+<section class="screen" id="play">
+  <header class="hud" id="hud">
+    <svg id="strip" role="img" aria-label="Your miner digs a tunnel. Each right answer breaks one block."></svg>
+    <div class="row">
+      <div class="bar pk"><i id="pkBar"></i><span id="pkTxt"></span></div>
+      <div class="bar pg"><i id="pgBar"></i><span id="pgTxt"></span></div>
+      <button class="icon" id="sndBtn" aria-label="Turn the sound on or off">♪</button>
+    </div>
+    <div class="ores" id="ores"></div>
+  </header>
+  <main class="card">
+    <div class="cardTop"><span class="tag" id="tag"></span><button class="read" id="readBtn">🔊 Read to me</button></div>
+    <p class="prompt" id="prompt"></p>
+    <div class="art" id="art"></div>
+    <div class="opts" id="opts"></div>
+    <div class="fb" id="fb" aria-live="polite"></div>
+    <button class="big-btn" id="nextBtn">Next ▶</button>
+  </main>
+</section>
+
+<section class="screen" id="end">
+  <h1 class="title" id="endTitle"></h1>
+  <svg id="endPick" viewBox="0 0 100 100" role="img" aria-label="Your pick"></svg>
+  <div class="score">
+    <div class="pct" id="endPct"></div>
+    <p id="endLine"></p>
+    <div class="stats">
+      <div><b id="endOre"></b>ore collected</div>
+      <div><b id="endDur"></b>pick left</div>
+      <div><b id="endStreak"></b>best streak</div>
+    </div>
+    <div class="again" id="endAgain"></div>
+  </div>
+  <p class="teacher">Show this screen to your teacher.</p>
+  <button class="big-btn" id="againBtn">Dig again</button>
+</section>
+
+<div id="drop"><svg id="dropArt" viewBox="0 0 60 66" role="img" aria-label="Your miner"></svg><div class="title">Digging in…</div></div>
+<div id="toast" role="status"></div>
+<div id="confetti" aria-hidden="true"></div>
+
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+// ---------------- audio: original music and sound effects, made live with Web Audio ----------------
+var AC = null, soundOn = true, NOISE = null, MASTER = null;
+function ac() {
+  if (!AC) {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    MASTER = AC.createGain(); MASTER.gain.value = 0.7; MASTER.connect(AC.destination);
+    NOISE = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
+    var d = NOISE.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+var hz = function (m) { return 440 * Math.pow(2, (m - 69) / 12); };
+function toneAt(f, t, d, type, v, f2) {
+  var o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + Math.min(0.012, d / 4)); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(g); g.connect(MASTER); o.start(t); o.stop(t + d + 0.05);
+}
+function noiseAt(t, d, v, freq) {
+  var s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = NOISE; f.type = 'bandpass'; f.frequency.value = freq || 1800; f.Q.value = 0.8;
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  s.connect(f); f.connect(g); g.connect(MASTER); s.start(t); s.stop(t + d + 0.05);
+}
+function fx(fn) { if (!soundOn) return; try { ac(); fn(AC.currentTime + 0.01); } catch (e) { } }
+var SFX = {
+  mine: function () { fx(function (t) { noiseAt(t, 0.09, 0.12, 3200); toneAt(1500, t, 0.07, 'square', 0.025, 700); noiseAt(t + 0.1, 0.16, 0.1, 900); toneAt(160, t + 0.1, 0.16, 'triangle', 0.1, 70); }); },
+  ore: function () { fx(function (t) { [76, 83, 88].forEach(function (m, i) { toneAt(hz(m), t + 0.16 + i * 0.07, 0.35, 'sine', 0.07); }); }); },
+  hit: function () { fx(function (t) { toneAt(240, t, 0.12, 'square', 0.03, 120); noiseAt(t, 0.12, 0.08, 2400); toneAt(hz(52), t + 0.1, 0.3, 'triangle', 0.08); }); },
+  fix: function () { fx(function (t) { [60, 67, 72, 79].forEach(function (m, i) { toneAt(hz(m + 12), t + i * 0.07, 0.4, 'triangle', 0.07); }); }); },
+  dig: function () { fx(function (t) { for (var k = 0; k < 3; k++) { noiseAt(t + k * 0.28, 0.1, 0.1, 2800); toneAt(1300, t + k * 0.28, 0.06, 'square', 0.02, 600); } }); },
+  win: function () { fx(function (t) { [[67, 0], [72, 0.16], [76, 0.32], [79, 0.48], [76, 0.72], [79, 0.88], [84, 1.04]].forEach(function (p, i) { toneAt(hz(p[0]), t + p[1], i === 6 ? 1.6 : 0.4, 'triangle', 0.1); }); [48, 55, 64].forEach(function (m) { toneAt(hz(m), t + 1.04, 1.8, 'sine', 0.09); }); }); }
+};
+// music: a calm plucked loop with a soft bass, a cave-like feel in a major key (C, Em, F, G)
+var Music = {
+  timer: null, next: 0, beat: 0,
+  start: function () {
+    this.stop(); if (!soundOn) return;
+    try { ac(); } catch (e) { return; }
+    this.beat = 0; this.next = AC.currentTime + 0.2;
+    var self = this; this.timer = setInterval(function () { self.tick(); }, 60);
+  },
+  tick: function () { while (this.next < AC.currentTime + 0.25) { this.play(this.next, this.beat); this.next += 0.3; this.beat++; } },
+  play: function (t, b) {
+    var bar = Math.floor(b / 8) % 4, root = [48, 40, 41, 43][bar], ch = [[72, 76, 79], [71, 76, 79], [69, 72, 77], [71, 74, 79]][bar], pat = [0, 2, 1, 2, 0, 1, 2, 1];
+    var m = ch[pat[b % 8]];
+    toneAt(hz(m), t, 0.32, 'sine', 0.045); toneAt(hz(m) * 2, t, 0.1, 'sine', 0.012);
+    if (b % 4 === 0) toneAt(hz(root - 12 + 12), t, 0.7, 'triangle', 0.075);
+    if (b % 8 === 6) toneAt(hz(root + 7), t, 0.5, 'triangle', 0.035);
+    if (b % 16 === 15) toneAt(hz(ch[2] + 12), t + 0.15, 0.6, 'sine', 0.02);
+  },
+  stop: function () { if (this.timer) clearInterval(this.timer); this.timer = null; }
+};
+document.addEventListener('visibilitychange', function () { if (document.hidden) Music.stop(); else if (S && $('play').classList.contains('on')) Music.start(); });
+
+// ---------------- drawings ----------------
+var C = { grid: '#2e86de' };
+var ORE = { coal: { col: '#2b2b33', name: 'coal' }, iron: { col: '#e3b692', name: 'iron' }, gold: { col: '#f5c518', name: 'gold' }, gem: { col: '#2fd6c3', name: 'gem' } };
+var ZONE = [{ b: '#8a5a35', hi: '#9c6b43', c: '#6e4727' }, { b: '#7f8a96', hi: '#919ca8', c: '#5f6974' }, { b: '#454b6e', hi: '#565d84', c: '#32375a' }];
+function oreOf(i) { return i < 10 ? (i % 2 ? 'iron' : 'coal') : i < 20 ? (i % 2 ? 'gold' : 'iron') : (i % 3 === 2 || i === 29 ? 'gem' : 'gold'); }
+function zoneOf(i) { return i < 10 ? 0 : i < 20 ? 1 : 2; }
+function speck(x, y, r, col) { return '<polygon points="' + x + ',' + (y - r) + ' ' + (x + r) + ',' + y + ' ' + x + ',' + (y + r) + ' ' + (x - r) + ',' + y + '" fill="' + col + '" stroke="#1d1a17" stroke-width="1"/>'; }
+// the miner, drawn in a 60 x 66 box: hard hat with a lamp, overalls and a pick
+function minerG() {
+  return '<g><path d="M44 22 L56 8" stroke="#7a4a24" stroke-width="4" stroke-linecap="round"/><path d="M47 3 Q58 3 60 15" fill="none" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>' +
+    '<rect x="18" y="33" width="24" height="20" rx="3" fill="#2e6fb5" stroke="#1d1a17" stroke-width="2.5"/><rect x="22" y="53" width="7" height="10" fill="#7a4a24" stroke="#1d1a17" stroke-width="2"/><rect x="31" y="53" width="7" height="10" fill="#7a4a24" stroke="#1d1a17" stroke-width="2"/>' +
+    '<path d="M40 38 L47 22" stroke="#2e6fb5" stroke-width="6" stroke-linecap="round"/>' +
+    '<rect x="16" y="13" width="28" height="22" rx="5" fill="#f0c9a0" stroke="#1d1a17" stroke-width="2.5"/><circle cx="24" cy="24" r="2.4" fill="#1d1a17"/><circle cx="36" cy="24" r="2.4" fill="#1d1a17"/><path d="M26 30 q4 3 8 0" stroke="#1d1a17" stroke-width="1.8" fill="none"/>' +
+    '<path d="M12 15 Q13 3 30 3 Q47 3 48 15 Z" fill="#f5b82e" stroke="#1d1a17" stroke-width="2.5"/><rect x="26" y="4" width="8" height="7" rx="2" fill="#fff6c9" stroke="#1d1a17" stroke-width="1.5"/></g>';
+}
+function chestG(x, y) { return '<g transform="translate(' + x + ' ' + y + ')"><rect x="0" y="8" width="34" height="22" fill="#a86a2c" stroke="#1d1a17" stroke-width="2.5"/><path d="M0 8 Q17 -6 34 8 Z" fill="#c78438" stroke="#1d1a17" stroke-width="2.5"/><rect x="13" y="6" width="8" height="10" fill="#f5c518" stroke="#1d1a17" stroke-width="1.5"/></g>'; }
+// the tunnel: 30 blocks in a row, one for each question; the world slides left as blocks break
+var BLK = 40, MX = 58;
+function buildStrip() {
+  var s = '<g id="world">', i, W = BLK * (Q.length + 40);
+  s += '<rect x="-200" y="0" width="' + (W + 200) + '" height="72" fill="#1a1411"/>';
+  for (i = -6; i < Q.length + 40; i++) {
+    var z = ZONE[zoneOf(Math.max(0, Math.min(i, 29)))], x = BLK * i + BLK;
+    s += '<rect x="' + x + '" y="0" width="' + (BLK + 0.5) + '" height="14" fill="' + z.c + '"/><rect x="' + x + '" y="58" width="' + (BLK + 0.5) + '" height="14" fill="' + z.c + '"/>';
+    if (zoneOf(Math.max(0, Math.min(i, 29))) === 0) s += '<rect x="' + x + '" y="0" width="' + (BLK + 0.5) + '" height="5" fill="#58b947"/>';
+  }
+  for (i = 0; i < Q.length; i++) {
+    var zz = ZONE[zoneOf(i)], bx = BLK * i + BLK, col = ORE[oreOf(i)].col;
+    s += '<g class="blk" id="b' + i + '"><rect x="' + bx + '" y="14" width="' + BLK + '" height="44" fill="' + zz.b + '" stroke="#1d1a17" stroke-width="1.5"/><rect x="' + (bx + 4) + '" y="18" width="' + (BLK - 8) + '" height="36" fill="' + zz.hi + '"/>' +
+      speck(bx + 13, 28, 5, col) + speck(bx + 27, 34, 6, col) + speck(bx + 14, 45, 4, col) + '</g>';
+  }
+  s += chestG(BLK * Q.length + BLK + 14, 28) + '</g>';
+  s += '<g transform="translate(' + (MX - 10) + ' 15) scale(.64)">' + minerG() + '</g>';
+  $('strip').innerHTML = s;
+}
+function fitStrip() {
+  var el = $('strip'), w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
+  el.setAttribute('viewBox', '0 0 ' + Math.round(w * 72 / h) + ' 72');
+}
+function oreIcon(k) { return '<svg viewBox="0 0 16 16" aria-hidden="true">' + speck(8, 8, 7, ORE[k].col) + '</svg>'; }
+function pickSVG(col) {
+  return '<circle cx="50" cy="50" r="49" fill="#fff" stroke="#1d1a17" stroke-width="2"/><path d="M28 88 L66 34" stroke="#1d1a17" stroke-width="13" stroke-linecap="round"/><path d="M28 88 L66 34" stroke="#a86a2c" stroke-width="8" stroke-linecap="round"/>' +
+    '<path d="M16 34 Q50 2 88 22 L84 34 Q54 18 30 42 Z" fill="' + col + '" stroke="#1d1a17" stroke-width="4" stroke-linejoin="round"/>';
+}
+function heroSVG() {
+  function cube(cx, cy, s, top, l, r, ore) {
+    var a = s * 0.87, b = s * 0.5, o = '';
+    if (ore) { o = speck(cx - a * 0.55, cy + s * 0.75, 5, ore) + speck(cx - a * 0.3, cy + s * 1.1, 4, ore) + speck(cx + a * 0.45, cy + s * 0.65, 5, ore) + speck(cx + a * 0.65, cy + s * 1.05, 4, ore); }
+    return '<polygon points="' + cx + ',' + (cy - b) + ' ' + (cx + a) + ',' + cy + ' ' + cx + ',' + (cy + b) + ' ' + (cx - a) + ',' + cy + '" fill="' + top + '" stroke="#1d1a17" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<polygon points="' + (cx - a) + ',' + cy + ' ' + cx + ',' + (cy + b) + ' ' + cx + ',' + (cy + s + b) + ' ' + (cx - a) + ',' + (cy + s) + '" fill="' + l + '" stroke="#1d1a17" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<polygon points="' + (cx + a) + ',' + cy + ' ' + cx + ',' + (cy + b) + ' ' + cx + ',' + (cy + s + b) + ' ' + (cx + a) + ',' + (cy + s) + '" fill="' + r + '" stroke="#1d1a17" stroke-width="2.5" stroke-linejoin="round"/>' + o;
+  }
+  var St = ['#a3aeba', '#7f8a96', '#5f6974'], G = ['#7bd265', '#8a5a35', '#6e4727'], s = 38, a = s * 0.87, b = s * 0.5, cx = 280, cy = 112;
+  function at(i, j, k) { return [cx + (i - j) * a, cy + (i + j) * b - k * s]; }
+  // [i, j, height, top and sides, ore]: drawn from the back of the pile to the front
+  var cells = [[0, 0, 0, G], [0, 0, 1, St, '#2b2b33'], [0, 0, 2, St, '#f5c518'], [1, 0, 0, G], [1, 0, 1, St, '#e3b692'], [0, 1, 0, G], [0, 1, 1, St, '#2fd6c3'],
+    [2, 0, 0, G], [1, 1, 0, G, '#e3b692'], [0, 2, 0, G], [2, 1, 0, G, '#2b2b33'], [1, 2, 0, G], [2, 2, 0, G, '#f5c518']];
+  var h = '<svg class="hero" viewBox="0 -32 560 288" role="img" aria-label="A miner with a hard hat stands on a stack of blocks with coal, iron, gold and gems in them. A treasure chest sits beside the stack.">';
+  cells.forEach(function (c) { var p = at(c[0], c[1], c[2]); h += cube(p[0], p[1], s, c[3][0], c[3][1], c[3][2], c[4]); });
+  var top = at(0, 0, 2), ch = at(2, 0, 0);
+  h += '<g transform="translate(' + (top[0] - 30) + ' ' + (top[1] - 62) + ')">' + minerG() + '</g>' + chestG(ch[0] - 17, ch[1] - 26);
+  return h + '</svg>';
+}
+function thermoSVG() {
+  var s = '<svg class="sheet-art" viewBox="0 0 300 300" role="img" aria-label="A goal thermometer marked 25, 50, 75 and 100 cans. It is filled up to 75.">' +
+    '<rect x="122" y="40" width="46" height="210" rx="23" fill="#fff" stroke="#1d1a17" stroke-width="4"/><circle cx="145" cy="252" r="34" fill="#d64545" stroke="#1d1a17" stroke-width="4"/>' +
+    '<rect x="134" y="' + (60 + 190 * 0.25) + '" width="22" height="' + (190 * 0.75 + 10) + '" fill="#d64545"/>';
+  [25, 50, 75, 100].forEach(function (v) { var y = 250 - 190 * v / 100; s += '<line x1="168" y1="' + y + '" x2="186" y2="' + y + '" stroke="#1d1a17" stroke-width="3"/><text x="192" y="' + (y + 6) + '" font-size="17" font-weight="800" fill="#1d1a17">' + v + '</text>'; });
+  return s + '<path d="M44 2h212l-14 16 14 16H44l14-16z" fill="#f5b82e" stroke="#1d1a17" stroke-width="3"/><text x="150" y="25" text-anchor="middle" font-size="18" font-weight="900" fill="#1d1a17">GOAL: 100 cans</text></svg>';
+}
+function pensSVG() {
+  var P = 'kbrbkrpkrk', col = { k: '#1f2633', b: '#2e86de', r: '#d64545', p: '#8e44ad' }, i;
+  var s = '<svg class="sheet-art" viewBox="0 0 300 250" role="img" aria-label="A green pen case with 10 pens: 4 black, 2 blue, 3 red and 1 purple.">';
+  for (i = 0; i < 10; i++) { var x = 46 + i * 21, top = 30 + (i % 3) * 10; s += '<rect x="' + x + '" y="' + top + '" width="16" height="130" rx="7" fill="' + col[P[i]] + '" stroke="#1d1a17" stroke-width="1.5"/>'; }
+  return s + '<path d="M30 120h240l-14 118H44z" fill="#3d9b48" stroke="#1d1a17" stroke-width="3"/></svg>';
+}
+function tripTable() {
+  var T = [['Museum', 21, '#2e86de'], ['Art Exhibit', 16, '#e07b16'], ['Library', 13, '#119c7f'], ['Printing Press', 22, '#8e44ad'], ['Capitol Building', 28, '#d64545']];
+  return '<table class="tb"><tr><th>Field trip</th><th>Percent</th></tr>' + T.map(function (r) { return '<tr><td><span class="sw" style="background:' + r[2] + '"></span>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join('') + '</table>';
+}
+function frac(a, b) {
+  var say = (a === '?' ? 'what number' : a) + ' over ' + b;
+  return '<span class="fr" data-say="' + say + '"><span>' + a + '</span><span>' + b + '</span></span>';
+}
+var f = frac;
+// a grid is shaded one column at a time from the left; a part column fills from the bottom up
+function gridSVG(n, o) {
+  o = o || {}; var P = o.plates || Math.max(1, Math.ceil(n / 100)), W = P * 140 + (P - 1) * 16, s = '', p, c, r, k;
+  for (p = 0; p < P; p++) {
+    var x0 = p * 156, m = Math.max(0, Math.min(100, n - 100 * p));
+    s += '<rect x="' + x0 + '" y="1" width="140" height="140" fill="#fff"/>';
+    for (c = 0; c < 10; c++) for (r = 0; r < 10; r++) if (c * 10 + (9 - r) < m) s += '<rect x="' + (x0 + c * 14) + '" y="' + (1 + r * 14) + '" width="14" height="14" fill="' + (o.col || C.grid) + '"/>';
+    for (k = 1; k < 10; k++) {
+      s += '<line x1="' + (x0 + k * 14) + '" y1="1" x2="' + (x0 + k * 14) + '" y2="141" stroke="#7f95ab" stroke-width="1"/>';
+      if (!o.tenths) s += '<line x1="' + x0 + '" y1="' + (1 + k * 14) + '" x2="' + (x0 + 140) + '" y2="' + (1 + k * 14) + '" stroke="#7f95ab" stroke-width="1"/>';
+    }
+    s += '<rect x="' + x0 + '" y="1" width="140" height="140" fill="none" stroke="#12233f" stroke-width="2.5"/>';
+  }
+  return '<span class="mini"><svg viewBox="-2 -1 ' + (W + 4) + ' 144" width="' + (W + 4) + '" height="144" role="img" aria-label="' + esc(o.aria || 'A grid of 100 squares with ' + n + ' squares shaded') + '">' + s + '</svg></span>';
+}
+
+// ---------------- the questions: every problem of the book, with its numbers and names ----------------
+var Q = [
+  { tag: 'Which one?', p: 'Three of these name the same amount. Which one does <b>not</b> belong with the others?',
+    o: ['4 out of 5', '80%', '12 : 80', f('80', '100')], a: 2, hint: '4 out of 5 is the same as 80 out of 100. Which one is <b>not</b> 80 out of 100?', x: f('80', '100') + ', 80% and 4 out of 5 all name 80 out of 100. <b>12 : 80</b> is the same as 15 out of 100.' },
+  { tag: 'Food drive', art: thermoSVG(), p: 'Some students are running a canned food drive. Their goal is <b>100 cans</b> each week, and so far they have brought in <b>75 cans</b>. Which fraction in simplest form shows the part of the goal they have reached?',
+    o: [f('1', '4'), f('3', '4'), f('7', '5'), f('15', '100')], a: 1, hint: 'Divide 75 and 100 by 25.', x: f('75', '100') + ' = ' + f('75 ÷ 25', '100 ÷ 25') + ' = <b>' + f('3', '4') + '</b>.' },
+  { tag: 'Food drive', art: gridSVG(75, { aria: 'A hundredths grid. 7 columns and 5 more squares are shaded.' }), p: '75 out of 100 cans is 75%. How do you write 75% as a decimal?',
+    o: ['75', '7.5', '0.75', '0.075'], a: 2, hint: '75% is 75 hundredths.', x: '75% = ' + f('75', '100') + ' = <b>0.75</b>. So ' + f('3', '4') + ', 0.75 and 75% are three names for one amount.' },
+  { tag: 'Food drive', p: 'What if the goal changed to <b>150 cans</b>, and the students still had 75 cans? What percent of the goal would that be?',
+    o: ['25%', '50%', '75%', '150%'], a: 1, hint: '75 is half of 150.', x: f('75', '150') + ' = ' + f('1', '2') + ' = ' + f('50', '100') + ' = <b>50%</b>.' },
+  { tag: 'Number reorganization', p: 'Write ' + f('3', '20') + ' as a decimal.',
+    o: ['0.15', '0.2', '0.3', '3.2'], a: 0, hint: '20 × 5 = 100, so ' + f('3', '20') + ' = ' + f('15', '100') + '.', x: f('3', '20') + ' = ' + f('15', '100') + ' = <b>0.15</b>.' },
+  { tag: 'Number reorganization', p: 'Write 0.45 as a percent.',
+    o: ['0.45%', '4.5%', '45%', '450%'], a: 2, hint: '0.45 is 45 hundredths: 45 out of 100.', x: '0.45 = ' + f('45', '100') + ' = <b>45%</b>.' },
+  { tag: 'Number reorganization', p: 'Which list orders ' + f('2', '5') + ', 30%, 0.25, ' + f('3', '20') + ' and 0.45 from <b>least to greatest</b>?', one: 1,
+    o: ['0.25, ' + f('3', '20') + ', 30%, 0.45, ' + f('2', '5'), f('3', '20') + ', 0.25, 30%, ' + f('2', '5') + ', 0.45', f('2', '5') + ', ' + f('3', '20') + ', 0.25, 30%, 0.45', '0.45, ' + f('2', '5') + ', 30%, 0.25, ' + f('3', '20')], a: 1,
+    hint: 'Write them all as percents first: ' + f('2', '5') + ' = 40%, 0.25 = 25%, ' + f('3', '20') + ' = 15%, 0.45 = 45%.', x: 'As percents: 15%, 25%, 30%, 40%, 45%. So the order is <b>' + f('3', '20') + ', 0.25, 30%, ' + f('2', '5') + ', 0.45</b>.' },
+  { tag: 'Number reorganization', p: 'One student wrote ' + f('2', '5') + ' as <b>0.4</b>. Another student wrote it as <b>0.40</b>. Who is correct?', one: 1,
+    o: ['Only the student who wrote 0.4', 'Only the student who wrote 0.40', 'Both students', 'Neither student'], a: 2, hint: 'Is 4 tenths the same as 40 hundredths?', x: '<b>Both</b> are correct. 0.4 = 0.40, because ' + f('4', '10') + ' = ' + f('40', '100') + '.' },
+  { tag: 'Number reorganization', p: 'When you write a fraction as a percent, why do you look for an equivalent fraction with a denominator of <b>100</b>?', one: 1,
+    o: ['Because 100 is always the greatest number', 'Because it makes the fraction smaller', 'Because a percent compares a number with 100'], a: 2, hint: 'Think about what the word percent means: per 100.', x: 'Per cent means out of 100. A percent compares a number with <b>100</b>, so the fraction must compare with 100 too.' },
+  { tag: 'High-top sneakers', p: 'There are <b>15</b> players on the boys’ basketball team, and <b>12</b> of them like to wear high-top sneakers. Which shows this amount in all three forms?', one: 1,
+    o: [f('4', '5') + ' = 0.80 = 80%', f('3', '4') + ' = 0.75 = 75%', f('12', '15') + ' = 0.12 = 12%'], a: 0, hint: 'Divide 12 and 15 by 3 first.', x: f('12', '15') + ' = ' + f('4', '5') + ' = ' + f('80', '100') + ' = 0.80 = <b>80%</b>.' },
+  { tag: 'High-top sneakers', p: 'There are <b>12</b> players on the girls’ basketball team, and <b>9</b> of them like to wear high-top sneakers. Which shows this amount in all three forms?', one: 1,
+    o: [f('9', '12') + ' = 0.9 = 90%', f('3', '4') + ' = 0.75 = 75%', f('4', '5') + ' = 0.80 = 80%'], a: 1, hint: 'Divide 9 and 12 by 3 first.', x: f('9', '12') + ' = ' + f('3', '4') + ' = ' + f('75', '100') + ' = 0.75 = <b>75%</b>.' },
+  { tag: 'Percent to fraction', p: 'Write <b>36%</b> as a fraction.',
+    o: [f('3', '6'), f('36', '10'), f('36', '100'), f('100', '36')], a: 2, hint: 'Percent means out of 100.', x: '36% = <b>' + f('36', '100') + '</b>.' },
+  { tag: 'Percent to fraction', p: 'Write <b>40%</b> as a fraction.',
+    o: [f('40', '100'), f('4', '100'), f('40', '10'), f('100', '40')], a: 0, hint: 'Percent means out of 100.', x: '40% = <b>' + f('40', '100') + '</b>.' },
+  { tag: 'Percent to decimal', p: 'Write <b>15%</b> as a decimal.',
+    o: ['1.5', '0.15', '0.015', '15'], a: 1, hint: '15% is 15 hundredths.', x: '15% = ' + f('15', '100') + ' = <b>0.15</b>.' },
+  { tag: 'Percent to decimal', p: 'Write <b>87%</b> as a decimal.',
+    o: ['87', '8.7', '0.87', '0.087'], a: 2, hint: '87% is 87 hundredths.', x: '87% = ' + f('87', '100') + ' = <b>0.87</b>.' },
+  { tag: 'Claire’s soccer team', p: 'Claire’s team won <b>0.65</b> of their soccer games last season. This season they won <b>73%</b> of their games. Which season had the better win record?', one: 1,
+    o: ['This season (73%)', 'Last season (0.65)', 'They are the same.'], a: 0, hint: '0.65 = 65%. Is 65% more or less than 73%?', x: 'Last season: 0.65 = 65%. This season: 73%. 73% is more, so <b>this season</b> was better.' },
+  { tag: 'Compare', p: 'Which is greater: ' + f('4', '10') + ' or 60%?', one: 1,
+    o: [f('4', '10'), '60%', 'They are equal.'], a: 1, hint: f('4', '10') + ' = ' + f('40', '100') + ' = 40%. Compare it with 60%.', x: f('4', '10') + ' = ' + f('40', '100') + ' and 60% = ' + f('60', '100') + ', so <b>60%</b> is greater.' },
+  { tag: 'Field trips', art: tripTable(), p: 'The table shows a survey of this year’s students about their favourite field trip. What fraction of the students chose the museum?',
+    o: [f('21', '10'), f('21', '100'), f('79', '100'), f('1', '21')], a: 1, hint: 'Look at the table: 21% chose the museum.', x: '21% = <b>' + f('21', '100') + '</b>.' },
+  { tag: 'Field trips', art: tripTable(), p: 'What part of the students, as a decimal, chose the library <b>or</b> the printing press?',
+    o: ['0.13', '0.22', '0.35', '3.5'], a: 2, hint: 'Add the two percents first: 13% + 22%.', x: '13% + 22% = 35% = <b>0.35</b>.' },
+  { tag: 'Field trips', art: tripTable(), p: 'Last year, <b>0.2</b> of the students chose the art exhibit. How does this year compare?', one: 1,
+    o: ['This year, 4% more students chose it.', 'This year, 4% fewer students chose it.', 'It is the same.', 'This year, 14% fewer students chose it.'], a: 1, hint: '0.2 = 20%. This year it is 16%.', x: 'Last year: 0.2 = 20%. This year: 16%. 20% − 16% = 4%, so <b>4% fewer</b>.' },
+  { tag: 'Tahira’s pens', art: pensSVG(), p: 'Tahira’s pen case is filled with black, blue, red and purple pens. What fraction of her pens are blue, and what percent is that?',
+    o: [f('2', '10') + ' = 2%', f('1', '10') + ' = 10%', f('2', '10') + ' = 20%', f('4', '10') + ' = 40%'], a: 2, hint: 'Count all the pens, then count the blue ones.', x: '2 of the 10 pens are blue: ' + f('2', '10') + ' = ' + f('20', '100') + ' = <b>20%</b>.' },
+  { tag: 'Tahira’s pens', art: pensSVG(), p: 'What part of Tahira’s pens, as a decimal, are black <b>or</b> blue?',
+    o: ['0.4', '0.6', '0.2', '6.0'], a: 1, hint: '4 black pens and 2 blue pens. How many out of 10?', x: '4 + 2 = 6 pens out of 10: ' + f('6', '10') + ' = <b>0.6</b>.' },
+  { tag: 'The fastest program', p: 'A computer scientist writes three programs to finish a hard computation. Program A takes ' + f('4', '5') + ' of a second. Program B takes <b>0.75</b> second. Program C takes <b>90%</b> of a second. Which program finishes in the shortest time?', one: 1,
+    o: ['Program A', 'Program B', 'Program C'], a: 1, hint: 'Write all three as decimals, then compare.', x: 'A = ' + f('4', '5') + ' = 0.8 s, B = 0.75 s, C = 90% = 0.9 s. The least time is 0.75 second, so <b>Program B</b> is fastest.' },
+  { tag: 'Lucy’s claim', p: 'Lucy says that ' + f('3', '2') + ' can’t be written as a percent, because it isn’t a fraction with a denominator of 100. Is Lucy right?', one: 1,
+    o: ['Yes, it can’t be a percent.', 'No. ' + f('3', '2') + ' = ' + f('150', '100') + ' = 150%', 'No. ' + f('3', '2') + ' = 32%'], a: 1, hint: '2 × 50 = 100, so 3 × 50 = ?', x: f('3', '2') + ' = ' + f('150', '100') + ' = <b>150%</b>. A percent can be greater than 100%.' },
+  { tag: 'Quick check', p: 'Which two are equivalent to <b>0.3</b>?',
+    o: [f('3', '100') + ' and 3%', f('3', '10') + ' and 30%', '0.3% and 3%', f('3', '100') + ' and 30%'], a: 1, hint: '0.3 is 3 tenths. 3 tenths = 30 hundredths.', x: '0.3 = ' + f('3', '10') + ' = ' + f('30', '100') + ' = <b>30%</b>.' },
+  { tag: 'Quick check', p: 'Which decimal and percent are both equivalent to ' + f('3', '5') + '?',
+    o: ['0.35 and 35%', '3.5 and 35%', '0.6 and 60%', '0.06 and 6%'], a: 2, hint: '5 × 20 = 100. Multiply the 3 by 20 too.', x: f('3', '5') + ' = ' + f('6', '10') + ' = <b>0.6</b>, and ' + f('3', '5') + ' = ' + f('60', '100') + ' = <b>60%</b>.' },
+  { tag: 'Quick check', p: 'Write <b>35%</b> as a fraction in simplest form and as a decimal.',
+    o: [f('7', '20') + ' and 0.35', f('7', '10') + ' and 0.7', f('35', '10') + ' and 3.5', f('3', '5') + ' and 0.35'], a: 0, hint: 'Divide 35 and 100 by 5.', x: f('35', '100') + ' = <b>' + f('7', '20') + '</b>, and 35% = <b>0.35</b>.' },
+  { tag: 'Quick check', p: 'Which is greater: 42% or ' + f('2', '5') + '?', one: 1,
+    o: ['42%', f('2', '5'), 'They are equal.'], a: 0, hint: f('2', '5') + ' = ' + f('40', '100') + ' = 40%. Compare it with 42%.', x: '42% = ' + f('42', '100') + ' and ' + f('2', '5') + ' = ' + f('40', '100') + ', so <b>42%</b> is greater.' },
+  { tag: 'Quick check', p: 'Which list orders the numbers from <b>greatest to least</b>?', one: 1,
+    o: [f('7', '10') + ', ' + f('3', '5') + ', 67%, 0.64', '0.64, 67%, ' + f('7', '10') + ', ' + f('3', '5'), f('7', '10') + ', 67%, 0.64, ' + f('3', '5'), '67%, 0.64, ' + f('7', '10') + ', ' + f('3', '5')], a: 2,
+    hint: 'Write them all as percents: ' + f('7', '10') + ' = 70%, 0.64 = 64%, ' + f('3', '5') + ' = 60%.', x: '70%, 67%, 64%, 60%. So the order is <b>' + f('7', '10') + ', 67%, 0.64, ' + f('3', '5') + '</b>.' },
+  { tag: 'Quick check', p: 'Write <b>42.5%</b> as a fraction in simplest form and as a decimal.',
+    o: [f('4', '10') + ' and 0.42', f('17', '4') + ' and 4.25', f('425', '100') + ' and 4.25', f('17', '40') + ' and 0.425'], a: 3, hint: '42.5% = ' + f('425', '1,000') + '. Divide 425 and 1,000 by 25. For the decimal, divide 42.5 by 100.', x: f('425', '1,000') + ' = <b>' + f('17', '40') + '</b>, and 42.5 ÷ 100 = <b>0.425</b>.' }
+];
+
+// ---------------- state ----------------
+var KEY = 'deep-dig-v1', S = null;
+function fresh() { return { qi: 0, pick: 100, ore: { coal: 0, iron: 0, gold: 0, gem: 0 }, streak: 0, best: 0, tries: 0, solved: false, missed: [] }; }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }
+function load() { try { var j = localStorage.getItem(KEY); return j ? JSON.parse(j) : null; } catch (e) { return null; } }
+function wipe() { try { localStorage.removeItem(KEY); } catch (e) { } }
+function show(id) { ['start', 'play', 'end'].forEach(function (s) { $(s).classList.toggle('on', s === id); }); window.scrollTo(0, 0); }
+var toastT = null;
+function toast(msg) { var t = $('toast'); t.innerHTML = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove('on'); }, 2600); }
+function confetti() {
+  if (RM) return; var box = $('confetti'), cols = ['#f5c518', '#2fd6c3', '#e3b692', '#58b947', '#fff'], i, h = '';
+  for (i = 0; i < 60; i++) h += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;background:' + cols[i % 5] + ';animation-delay:' + (Math.random() * 1.2).toFixed(2) + 's"></i>';
+  box.innerHTML = h; setTimeout(function () { box.innerHTML = ''; }, 4500);
+}
+
+// ---------------- the top bar ----------------
+function hud() {
+  var n = Q.length, done = S.qi + (S.solved ? 1 : 0), i;
+  fitStrip();
+  $('world').style.transform = 'translateX(' + (MX - done * BLK + (done >= n ? -40 : 0)) + 'px)';
+  for (i = 0; i < n; i++) $('b' + i).style.opacity = i < done ? 0 : 1;
+  $('pkBar').style.width = S.pick + '%'; $('pkTxt').textContent = 'Pick ' + S.pick + '%';
+  $('pgBar').style.width = (done / n * 100) + '%'; $('pgTxt').textContent = 'Question ' + Math.min(S.qi + 1, n) + ' of ' + n;
+  $('ores').innerHTML = ['coal', 'iron', 'gold', 'gem'].map(function (k) { return '<span>' + oreIcon(k) + ORE[k].name + ' ' + S.ore[k] + '</span>'; }).join('');
+  document.body.className = 'z' + zoneOf(Math.min(S.qi, n - 1));
+}
+
+// ---------------- one question on the screen ----------------
+function renderQ() {
+  var q = Q[S.qi], box = $('opts');
+  $('tag').textContent = q.tag;
+  $('prompt').innerHTML = q.p;
+  var art = $('art'); art.innerHTML = q.art || ''; art.hidden = !q.art;
+  box.className = 'opts' + (q.one ? ' one' : '');
+  box.innerHTML = q.o.map(function (t, i) { return '<button class="opt" data-i="' + i + '"><span class="ltr">' + 'ABCD'[i] + '</span><span class="t">' + t + '</span></button>'; }).join('');
+  var fb = $('fb'); fb.className = 'fb'; fb.innerHTML = '';
+  $('nextBtn').classList.remove('on');
+  hud();
+}
+function optBtn(i) { return $('opts').querySelector('[data-i="' + i + '"]'); }
+function answer(i) {
+  var q = Q[S.qi], b = optBtn(i); if (S.solved || !b || b.disabled) return;
+  var fb = $('fb');
+  if (i === q.a) {
+    var first = S.tries === 0, ore = oreOf(S.qi);
+    S.solved = true;
+    b.classList.add('good');
+    [].forEach.call($('opts').children, function (x) { x.disabled = true; x.classList.add('dim'); });
+    if (first) {
+      S.ore[ore]++; S.streak++; S.best = Math.max(S.best, S.streak);
+      if (S.streak % 3 === 0 && S.pick < 100) { S.pick = Math.min(100, S.pick + 10); toast(S.streak + ' in a row! Pick repaired +10%'); SFX.fix(); }
+      else if (S.streak % 3 === 0) toast(S.streak + ' in a row!');
+    }
+    fb.className = 'fb on good';
+    fb.innerHTML = '<b class="h">Correct! The block breaks.' + (first ? ' +1 ' + ORE[ore].name : '') + '</b> ' + q.x;
+    SFX.mine(); if (first) SFX.ore();
+    var nb = $('nextBtn'); nb.textContent = S.qi === Q.length - 1 ? 'Open the chest ▶' : 'Next ▶'; nb.classList.add('on');
+    if (nb.scrollIntoView) nb.scrollIntoView({ block: 'nearest', behavior: RM ? 'auto' : 'smooth' });
+  } else {
+    if (S.tries === 0) { S.missed.push(S.qi); S.streak = 0; }
+    S.tries++;
+    S.pick = Math.max(0, S.pick - 10);
+    b.classList.add('bad'); b.disabled = true;
+    fb.className = 'fb on bad';
+    fb.innerHTML = '<b class="h">The block holds! Pick −10%.</b> Try again. Hint: ' + q.hint;
+    SFX.hit();
+    var h = $('hud'); h.classList.remove('hit'); void h.offsetWidth; h.classList.add('hit');
+  }
+  hud(); save();
+}
+function next() {
+  if (!S.solved) return;
+  S.qi++; S.tries = 0; S.solved = false;
+  if (S.qi >= Q.length) { finish(); return; }
+  renderQ(); save(); window.scrollTo(0, 0);
+  if (S.qi === 10) toast('Deeper! You reached the stone layer.');
+  if (S.qi === 20) toast('The deep layer! Gems ahead.');
+}
+
+// ---------------- the end ----------------
+function finish() {
+  var n = Q.length, first = n - S.missed.length, pct = Math.round(first / n * 100);
+  var tier = pct >= 90 ? ['Gem Pick', '#2fd6c3', 'Master miner!'] : pct >= 70 ? ['Gold Pick', '#f5c518', 'Great digging!'] : pct >= 50 ? ['Iron Pick', '#e3b692', 'Good digging!'] : ['Stone Pick', '#a3aeba', 'You reached the chest!'];
+  $('endTitle').textContent = tier[2];
+  $('endPick').innerHTML = pickSVG(tier[1]);
+  $('endPct').textContent = pct + '%';
+  $('endLine').textContent = first + ' out of ' + n + ' right on the first try. The chest holds a ' + tier[0] + '.';
+  $('endOre').textContent = first; $('endDur').textContent = S.pick + '%'; $('endStreak').textContent = S.best;
+  var seen = {}; S.missed.forEach(function (i) { var t = Q[i].tag; (seen[t] = seen[t] || []).push(i + 1); });
+  var keys = Object.keys(seen);
+  $('endAgain').innerHTML = keys.length ? '<b>Practise these again:</b><ul>' + keys.map(function (t) { return '<li>' + t + ' (question ' + seen[t].join(', ') + ')</li>'; }).join('') + '</ul>' : '';
+  document.body.className = '';
+  wipe(); Music.stop(); show('end'); SFX.win(); confetti();
+}
+
+// ---------------- reading aloud with the device's own voice ----------------
+var CAN_SPEAK = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+function plain(el) {
+  var c = el.cloneNode(true);
+  [].forEach.call(c.querySelectorAll('.fr'), function (x) { x.replaceWith(' ' + x.getAttribute('data-say') + ' '); });
+  [].forEach.call(c.querySelectorAll('svg'), function (s) { s.remove(); });
+  return c.textContent.replace(/\s+/g, ' ').trim();
+}
+function readAloud() {
+  if (!CAN_SPEAK) return;
+  var txt = plain($('prompt'));
+  [].forEach.call($('opts').children, function (b, i) { txt += ' ' + 'ABCD'[i] + '. ' + plain(b.querySelector('.t')) + '.'; });
+  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(txt); u.lang = 'en-US'; u.rate = 0.9; speechSynthesis.speak(u); } catch (e) { }
+}
+
+// ---------------- starting ----------------
+function begin(saved) {
+  S = saved || fresh();
+  if (S.solved) { S.qi++; S.tries = 0; S.solved = false; }
+  if (S.qi >= Q.length) { finish(); return; }
+  show('play'); renderQ(); save(); Music.start();
+}
+function drop(saved) {
+  try { ac(); } catch (e) { }
+  SFX.dig();
+  var d = $('drop'); d.classList.add('on');
+  setTimeout(function () { d.classList.remove('on'); begin(saved); }, RM ? 500 : 1100);
+}
+function setupStart() {
+  var sv = load();
+  $('goBtn').textContent = sv ? 'Continue' : 'Start digging';
+  $('newBtn').style.display = sv ? 'block' : 'none';
+}
+$('hero').innerHTML = heroSVG();
+$('dropArt').innerHTML = minerG();
+buildStrip();
+window.addEventListener('resize', function () { if (S) hud(); });
+$('goBtn').onclick = function () { drop(load()); };
+$('newBtn').onclick = function () { wipe(); drop(null); };
+$('againBtn').onclick = function () { wipe(); drop(null); };
+$('nextBtn').onclick = next;
+$('opts').addEventListener('click', function (e) { var b = e.target.closest('.opt'); if (b) answer(+b.getAttribute('data-i')); });
+$('readBtn').onclick = readAloud;
+if (!CAN_SPEAK) $('readBtn').style.display = 'none';
+$('sndBtn').onclick = function () {
+  soundOn = !soundOn; this.classList.toggle('off', !soundOn);
+  if (soundOn) Music.start(); else { Music.stop(); if (CAN_SPEAK) speechSynthesis.cancel(); }
+};
+setupStart();
+
+// test hooks
+window.__game = { get S() { return S; }, set S(v) { S = v; }, Q: Q, answer: answer, next: next, begin: begin, finish: finish, renderQ: renderQ, fresh: fresh, load: load, wipe: wipe, setupStart: setupStart };
+</script>
+</body>
+</html>
